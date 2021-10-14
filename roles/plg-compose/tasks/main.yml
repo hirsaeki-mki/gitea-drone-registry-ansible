@@ -1,0 +1,51 @@
+---
+
+- name: project directory created 
+  file: >
+    path={{ plg_project_src }}
+    state=directory
+  register: _r
+- debug: var=_r verbosity=1
+
+- name: project src created
+  template: >
+    dest={{ plg_project_src }}/docker-compose.yml
+    src=docker-compose.yml.j2
+    mode=0644
+  register: _r
+- debug: var=_r verbosity=1
+
+- name: project files created
+  template: >
+    dest={{ plg_project_src }}/{{ item|replace('.j2','') }}
+    src={{ item }}
+    mode=0644
+  loop: "{{ plg_project_templates }}"
+  register: _r
+- debug: var=_r verbosity=1
+
+- name: directories for loki created
+  file: >
+    path={{ plg_project_src }}/{{ loki_data_dir }}
+    state=directory
+    owner={{ loki_uid }}
+    group={{ loki_gid }}
+  register: _r
+- debug: var=_r verbosity=1
+
+- name: directories for grafana created
+  file: >
+    path={{ plg_project_src }}/{{ grafana_data_dir }}
+    state=directory
+    owner={{ grafana_uid }}
+    group={{ grafana_gid }}
+  register: _r
+- debug: var=_r verbosity=1
+
+- name: project started
+  command: >
+    chdir={{ plg_project_src }}
+    /usr/local/bin/docker-compose up -d
+  register: _r
+  changed_when: (_r.stderr|d('')).find('up-to-date') == -1
+- debug: var=_r verbosity=1

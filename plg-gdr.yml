@@ -1,0 +1,11 @@
+---
+- name: Install plg stack via docker
+  gather_facts: True
+  hosts: "plg-gdr"
+  become: True
+  roles:
+  - docker
+  - docker-compose
+  - plg-compose
+# - gdr-compose
+

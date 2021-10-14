@@ -1,4 +1,6 @@
 ---
-- import_playbook: gitlab.yml
-- import_playbook: gitlab-runner.yml
-
+- import_playbook: docker.yml
+- import_playbook: pip.yml
+- import_playbook: docker-compose-install.yml
+- import_playbook: plg-compose.yml
+# import_playbook: gdr-compose.yml

@@ -1,0 +1,24 @@
+---
+loki_version: 2.3.0
+loki_expose_port: "3100"
+loki_retention_delete_enabled: "true"
+loki_retention_period: 729h
+loki_data_dir: loki-data
+loki_uid: 10001
+loki_gid: 10001
+
+promtail_version: 2.3.0
+
+grafana_version: latest
+grafana_expose_port: "3000"
+grafana_admin_password: genepas1
+grafana_allow_sign_up: "false"
+grafana_data_dir: grafana-data
+grafana_uid: 472
+grafana_gid: 0
+
+plg_project_src: /opt/plg-stack
+plg_project_templates:
+- loki-local-config.yaml.j2
+- promtail-config.yml.j2
+- datasources.yaml.j2

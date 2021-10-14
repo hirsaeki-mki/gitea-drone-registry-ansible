@@ -1,0 +1,39 @@
+---
+# tasks file for selfsign-certs
+
+- name: ensure target dir
+  file: >
+    path={{ certs_root }}
+    state=directory
+  register: _r
+- debug: var=_r verbosity=1
+
+- name: private keys created
+  openssl_privatekey: >
+    path={{ certs_root }}/key.pem
+    mode="0600"
+  register: _r
+- debug: var=_r verbosity=1
+
+- name: csr created
+  openssl_csr: >
+    path={{ certs_root }}/key.csr
+    privatekey_path={{ certs_root }}/key.pem
+    common_name={{ key_cn }}
+    subject_alt_name={{ key_alt_name }}
+    key_usage={{ key_usage }}
+    extended_key_usage={{ extend_key_usage }}
+  register: _r
+- debug: var=_r verbosity=1
+
+- name: certificate created
+  openssl_certificate: >
+    path={{ certs_root }}/server-cert.pem
+    provider=ownca
+    csr_path={{ certs_root }}/server-cert.csr
+    ownca_path={{ certs_root }}/ca-cert.pem
+    ownca_privatekey_path={{ certs_root }}/ca-key.pem
+    ownca_privatekey_passphrase={{ ca_passphrase }}
+    entrust_not_after=+3650d
+  register: _r
+- debug: var=_r verbosity=1

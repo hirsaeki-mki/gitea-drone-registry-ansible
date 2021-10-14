@@ -1,0 +1,22 @@
+---
+
+- name: added /usr/local/bin to secure path
+  when: ansible_env.PATH.find('/usr/local/bin') == -1 
+  replace: >
+    path=/etc/sudoers
+    regexp='(^Defaults\s+secure_path\s*=\s*.*)'
+    replace='\1:/usr/local/bin'
+    validate='bash -c "cat /etc/sudoers %s | visudo -cf-"'
+
+- name: docker-compose url fetched
+  uri: >
+    url=https://api.github.com/repos/docker/compose/releases/{{ compose_release }}
+  register: compose
+
+- name: docker compose installed
+  get_url: >
+    dest=/usr/local/bin/docker-compose
+    url={{ compose.json|to_json|from_json|json_query('assets[].browser_download_url|[?ends_with(@,`run.sh`)]|[0]') }}
+    mode=0774
+    owner=root
+    group=docker

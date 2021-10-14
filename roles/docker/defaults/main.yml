@@ -1,9 +1,47 @@
 ---
 docker_edition: 'ce'
-docker_version: '18.03.0.ce-1.el7.centos'
+docker_version: ''
 docker_package: "docker-{{ docker_edition }}"
 docker_package_state: present
-docker_insecure_registry: localhost:4567
 
-# Used only for RedHat/CentOS.
-docker_yum_repo_url: https://download.docker.com/linux/centos/docker-{{ docker_edition }}.repo
+old_docker:
+  RedHat:
+  - docker
+  - docker-client
+  - docker-client-latest
+  - docker-common
+  - docker-latest
+  - docker-latest-logrotate
+  - docker-logrotate
+  - docker-engine
+  Debian:
+  - docker
+  - docker-engine
+  - docker.io
+  - containerd
+  - runc
+
+pre_requisite:
+  RedHat:
+  - yum-utils
+  - device-mapper-persistent-data
+  - lvm2
+  Debian:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+
+# set when REPLACE dockerd_options
+dockerd_options: []
+# - "--insecure-registry localhost:5000"
+
+dockerd_environments: []
+# - "http_proxy=http://example.com:8888"
+
+dockerd_settings:
+  log-driver: local
+
+docker_plugins_args: []
+# - "grafana/loki-docker-driver:latest --alias loki --grant-all-permissions"

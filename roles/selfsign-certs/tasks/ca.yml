@@ -1,0 +1,33 @@
+---
+# task for creating certificate authority
+
+- name: directory for ca files ensured 
+  file: >
+    path={{ ca_dir }}
+    state=directory
+
+- name: ca keys created
+  openssl_privatekey: >
+    path={{ ca_dir }}/ca-key.pem
+    mode="0600"
+    cipher=AES-256-CBC
+    passphrase={{ ca_passphrase }}
+
+- name: create ca csr
+  openssl_csr: >
+    path={{ ca_dir }}/ca.csr
+    privatekey_path={{ ca_dir }}/ca-key.pem
+    privatekey_passphrase={{ ca_passphrase }}
+    subject={{ ca_subject }}
+    basic_constraints=CA:TRUE
+    key_usage={{ ca_key_usage }}
+
+- name: selfsigned cacerts created
+  openssl_certificate: >
+    path={{ ca_dir }}/ca-cert.pem
+    provider=selfsigned
+    privatekey_passphrase={{ ca_passphrase }}
+    csr_path={{ ca_dir }}/ca-cert.csr
+    privatekey_path={{ ca_dir }}/ca-key.pem
+    mode=0666
+    entrust_not_after={{ expired_after }}

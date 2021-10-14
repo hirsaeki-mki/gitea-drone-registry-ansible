@@ -1,0 +1,7 @@
+---
+- name: Install docker
+  gather_facts: True
+  hosts: "plg-gdr"
+  become: yes
+  roles:
+  - docker

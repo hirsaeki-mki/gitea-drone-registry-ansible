@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+[Service]
+{% for env in dockerd_environments %}
+Environment="{{ env }}"
+{% endfor %}

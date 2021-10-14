@@ -1,49 +1,94 @@
 ---
-- name: Ensure old versions of Docker are not installed.
+
+- name: Old versions of Docker are not installed.
+  package: >
+    name={{ old_docker[ansible_distribution_file_variety] }}
+    state=absent
+
+- name: Pre-requisites package installed.
   package:
-    name: "{{ item }}"
-    state: absent
-  with_items:
-    - docker
-    - docker-common
-    - docker-engine
+    name={{ pre_requisite[ansible_distribution_file_variety] }}
 
-- name: Add Docker GPG key.
-  rpm_key:
-    key: https://download.docker.com/linux/centos/gpg
-    state: present
+- name: setup repository (RedHat).
+  include_tasks: >
+    file=redhat.yml
 
-- name: Add Docker repository.
-  get_url:
-    url: "{{ docker_yum_repo_url }}"
-    dest: "/etc/yum.repos.d/docker-{{ docker_edition }}.repo"
-    owner: root
-    group: root
-    mode: 0644
+- name: setup repository (Debian).
+  include_tasks: >
+    file=debian.yml
 
 - name: Define the Docker package name.
-  set_fact:
-    docker_package_name: "{{ docker_package }}-{{ docker_version }}"
+  set_fact: >
+    docker_package_name="{{ docker_package }}-{{ docker_version }}"
   when: docker_version != ''
 
 - name: Install Docker.
-  yum:
-    name: "{{ docker_package_name | default(docker_package) }}"
-    state: "{{ docker_package_state }}"
+  package: >
+    name="{{ docker_package_name|d(docker_package) }}"
+    state="{{ docker_package_state }}"
   register: install_packages
-  until: install_packages|success
+  until: install_packages is success
   retries: 5
   delay: 2
 
-- name: Add insecure registry to systemd unit file.
-  replace:
-    path: /usr/lib/systemd/system/docker.service
-    regexp: '^ExecStart=/usr/bin/dockerd$'
-    replace: 'ExecStart=/usr/bin/dockerd --insecure-registry {{ docker_insecure_registry }}'
+- name: docker daemon's env configured
+  when: dockerd_environments
+  block:
+  - name: drop-in direcotory ensured
+    file: >
+      path=/etc/systemd/system/docker.service.d
+      state=directory
+  - name: drop-in file set
+    template: >
+      dest=/etc/systemd/system/docker.service.d/environment.conf
+      src=environment.conf.j2
+    register: _r
 
-- name: Ensure Docker is started and enabled at boot.
-  systemd:
-    name: docker
-    state: started
-    enabled: True
-    daemon_reload: yes
+- name: docker is (re)started and enabled at boot ensured
+  service: >
+    name=docker
+    state={{ restart }}started
+    enabled=yes
+    daemon_reload=yes
+  vars:
+    restart: "{{ 're' if _r is changed else '' }}"
+
+- name: docker plugins installed
+  command: >
+    docker plugin install {{ item }}
+  loop: "{{ docker_plugins_args }}"
+  register: _r
+  failed_when: _r.stderr.find('already exists') == -1 and _r.rc != 0
+  changed_when: _r.rc == 0
+
+- name: REPLACE docker daemon option
+  when: dockerd_options
+  block:
+  - name: dropin direcotory ensured
+    file: >
+      path=/etc/systemd/system/docker.service.d
+      state=directory
+  - name: drop-in file set
+    template: >
+      dest=/etc/systemd/system/docker.service.d/customexec.conf
+      src=customexec.conf.j2
+    notify: restart docker
+
+- name: set docker daemon configuration
+  when: dockerd_settings
+  block:
+  - name: read daemon.json
+    slurp: >
+      src=/etc/docker/daemon.json
+    register: _r
+    ignore_errors: yes
+
+  - name: daemon.json set
+    copy: >
+      dest=/etc/docker/daemon.json
+      content={{ ((_r.content|b64decode) if _r is success else '{}')|from_json|combine(_dockerd_settings, recursive=True)|to_nice_json }}
+    register: _daemon_json 
+    vars:
+      _dockerd_settings: "{{ dockerd_settings }}"
+    notify: restart docker
+

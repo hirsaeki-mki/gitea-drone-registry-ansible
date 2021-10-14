@@ -1,0 +1,3 @@
+---
+compose_release_tag: ""
+compose_release: "{{ 'tags/%s' % compose_release_tag if compose_release_tag != '' else 'latest' }}"

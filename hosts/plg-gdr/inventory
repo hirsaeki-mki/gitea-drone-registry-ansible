@@ -1,0 +1,12 @@
+[plg_gdr]
+plg-gdr ansible_host=192.168.33.10
+
+[plg_gdr:vars]
+ansible_ssh_user=vagrant
+ansible_ssh_private_key_file=~/vagrant/infraci/.vagrant/machines/plg-gdr/virtualbox/private_key
+
+pip=pip3
+
+docker_plugins_args="['grafana/loki-docker-driver:latest --alias loki --grant-all-permissions']"
+dockerd_settings="{'insecure-registries': ['192.168.33.10:5000'], 'log-driver': 'loki', 'log-opts': {'loki-url': 'http://192.168.33.10:3100/loki/api/v1/push', 'loki-batch-size': '400', 'max-size': '10m'}}"
+

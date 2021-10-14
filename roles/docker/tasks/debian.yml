@@ -1,0 +1,12 @@
+---
+
+- name: Add Docker GPG key (Debian).
+  when: ansible_distribution_file_variety == "Debian"
+  apt_key: >
+    key=https://download.docker.com/linux/{{ ansible_distribution|lower }}/gpg
+    state=present
+
+- name: Add Docker repository (Debian).
+  when: ansible_distribution_file_variety == "Debian"
+  apt_repository: >
+    repo="deb https://download.docker.com/linux/{{ ansible_distribution|lower }} {{ ansible_distribution_release|lower }} stable"

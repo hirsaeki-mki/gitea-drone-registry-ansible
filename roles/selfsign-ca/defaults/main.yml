@@ -1,0 +1,16 @@
+---
+# defaults file for selfsign-ca
+ca_dir: /opt/selfsign-ca
+ca_passphrase: supersecuresecret
+ca_key_usage:
+- cRLSign
+- keyCertSign
+ca_subject:
+  C: JP
+  ST: Tokyo
+  L: Tokyo
+  O: MKI
+  OU: voice-infra
+  CN: selfsign.mki.co.jp
+  emailAddress: selfsign@mki.co.jp
+expired_after: +3650d

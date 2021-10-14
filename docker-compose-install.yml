@@ -1,0 +1,7 @@
+---
+- name: install docker compose
+  gather_facts: yes
+  hosts: "plg-gdr"
+  become: yes
+  roles:
+  - role: docker-compose
